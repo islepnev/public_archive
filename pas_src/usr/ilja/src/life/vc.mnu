@@ -1,0 +1,6 @@
+M:      Move to archive
+	@ds ne /S
+	@pkzip -ex -r -p -m &life.zip
+R:      Refresh archive
+	@ds ne /S
+	@pkzip -ex -r -p &life.zip

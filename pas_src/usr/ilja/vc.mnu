@@ -1,0 +1,9 @@
+C:      Clean up
+        @del C:\bp\usr\ilja\bin\*.exe
+        @del C:\bp\usr\ilja\bin\*.tpu
+        @del C:\bp\usr\ilja\bin\*.obj
+        @del C:\bp\usr\ilja\src\*.bak
+        @del C:\bp\usr\ilja\src\*.$$$
+        @cls
+F10:    System Menu...
+	c:\vc\vc.mnu

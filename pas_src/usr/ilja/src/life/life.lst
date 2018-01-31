@@ -1,0 +1,433 @@
+Turbo Assembler	 Version 3.2	    04/04/98 22:54:30	    Page 1
+C:\BP\USR\ILJA\SRC\LIFE\LIFE.ASM
+LIFE
+
+
+      1
+      2	    0000			 DATA	 SEGMENT WORD PUBLIC
+      3
+      4						 EXTRN	 TEST8086:BYTE
+      5						 EXTRN	 XSIZE,	YSIZE :	WORD
+      6						 EXTRN	 FIELD,	TEMPFIELD : FAR
+      7						 EXTRN	 SHOWCELL : FAR
+      8	    0000			 DATA	 ENDS
+      9
+     10	    0000			 CODE SEGMENT BYTE PUBLIC
+     11
+     12					 ASSUME	 CS:CODE, DS:DATA
+     13
+     14					 PUBLIC	 ITERATE, EDGES, SHOWF
+     15					 ;
+     16					 ;
+     17	    0000			 ITERATE PROC	 FAR
+     18					 .386
+     19	    0000  06				 PUSH	 ES
+     20	    0001  57				 PUSH	 DI
+     21	    0002  1E				 PUSH	 DS
+     22	    0003  55				 PUSH	 BP
+     23
+     24	    0004  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE
+     25	    000A  66| 0F B7 16 0000e		 MOVZX	 EDX, YSIZE
+     26	    0010  66| F7 E2			 MUL	 EDX
+     27	    0013  66| C1 E2 10			 SHL	 EDX, 16
+     28	    0017  66| 0B C2			 OR	 EAX, EDX
+     29	    001A  66| 8B C8			 MOV	 ECX, EAX
+     30					 ; now in ECX we have number of	cells
+     31	    001D  66| 0F B7 1E 0000e		 MOVZX	 EBX, XSIZE ; EBX = xSize
+     32					 ;
+     33	    0023  C4 3E	0000e			 LES	 DI,DWORD PTR [TEMPFIELD]
+     34					 ; now ES:[DI] points to the top of TEMPFIELD
+     35	    0027  C5 2E	0000e			 LDS	 BP,DWORD PTR [FIELD] ;			    ***	DS changed ***
+     36					 ; now DS:[BP] points to the top of FIELD
+     37					 ;
+     38
+     39	    002B  66| 49		 @CYCLE: DEC	 ECX
+     40					 ; in ECX we have the number of	current	cell
+     41					 ; null	neighbours
+     42	    002D  B2 00				 MOV	 DL, 0
+     43					 ; DL  = neighbours
+     44					 ; ECX = 'cell number'
+     45					 ; EBX = xSize
+     46	    002F  66| 8B C1			 MOV	 EAX, ECX      ;
+     47	    0032  66| 48			 DEC	 EAX	       ; here we find the left-top neighbour
+     48	    0034  66| 2B C3			 SUB	 EAX, EBX      ;
+     49	    0037  66| 3E: 0F A3	46 00		 BT	 DWORD PTR DS:[BP], EAX	; CF = ' cell	present'
+     50	    003D  80 D2	00			 ADC	 DL, 0
+     51
+     52	    0040  66| 40			 INC	 EAX
+     53	    0042  66| 3E: 0F A3	46 00		 BT	 DWORD PTR DS:[BP], EAX	; CF = ' cell present'
+     54	    0048  80 D2	00			 ADC	 DL, 0
+     55
+     56	    004B  66| 40			 INC	 EAX
+     57	    004D  66| 3E: 0F A3	46 00		 BT	 DWORD PTR DS:[BP], EAX	; CF = ' cell present'
+Turbo Assembler	 Version 3.2	    04/04/98 22:54:30	    Page 2
+C:\BP\USR\ILJA\SRC\LIFE\LIFE.ASM
+LIFE
+
+
+     58	    0053  80 D2	00			 ADC	 DL, 0
+     59
+     60	    0056  66| 03 C3			 ADD	 EAX, EBX
+     61	    0059  66| 3E: 0F A3	46 00		 BT	 DWORD PTR DS:[BP], EAX	; CF = ' cell present'
+     62	    005F  80 D2	00			 ADC	 DL, 0
+     63
+     64	    0062  66| 03 C3			 ADD	 EAX, EBX
+     65	    0065  66| 3E: 0F A3	46 00		 BT	 DWORD PTR DS:[BP], EAX	; CF = ' cell present'
+     66	    006B  80 D2	00			 ADC	 DL, 0
+     67
+     68	    006E  66| 48			 DEC	 EAX
+     69	    0070  66| 3E: 0F A3	46 00		 BT	 DWORD PTR DS:[BP], EAX	; CF = ' cell present'
+     70	    0076  80 D2	00			 ADC	 DL, 0
+     71
+     72	    0079  66| 48			 DEC	 EAX
+     73	    007B  66| 3E: 0F A3	46 00		 BT	 DWORD PTR DS:[BP], EAX	; CF = ' cell	present'
+     74	    0081  80 D2	00			 ADC	 DL, 0
+     75
+     76	    0084  66| 2B C3			 SUB	 EAX, EBX
+     77	    0087  66| 3E: 0F A3	46 00		 BT	 DWORD PTR DS:[BP], EAX	; CF = ' cell present'
+     78	    008D  80 D2	00			 ADC	 DL, 0
+     79
+     80	    0090  80 FA	03			 CMP	 DL, 3
+     81	    0093  75 0A	90 90			 JNE	 @@10
+     82	    0097  66| 26: 0F AB	0D		 BTS	 DWORD PTR ES:[DI], ECX	; born cell
+     83	    009C  EB 0D	90			 JMP	 @@11
+     84	    009F			 @@10:
+     85					 ;	 CMP	 DL,3
+     86					 ;	 JE	 @@11
+     87	    009F  80 FA	02			 CMP	 DL,2
+     88	    00A2  74 07	90 90			 JE	 @@11
+     89	    00A6  66| 26: 0F B3	0D		 BTR	 DWORD PTR ES:[DI], ECX	; kill cell
+     90
+     91	    00AB  66| 83 F9 00		 @@11:	 CMP	 ECX, 0
+     92	    00AF  0F 85	FF78			 JNE	 @CYCLE
+     93
+     94	    00B3  5D				 POP	 BP
+     95	    00B4  1F				 POP	 DS
+     96	    00B5  5F				 POP	 DI
+     97	    00B6  07				 POP	 ES
+     98	    00B7  CB				 RET
+     99	    00B8			 ITERATE ENDP
+    100
+    101	    00B8			 EDGES	 PROC	 FAR
+    102					 .386
+    103	    00B8  06				 PUSH	 ES
+    104	    00B9  57				 PUSH	 DI
+    105	    00BA  C4 3E	0000e			 LES	 DI,DWORD PTR [TEMPFIELD]
+    106					 ; now correct bounds
+    107					 ;     dst = left,top
+    108	    00BE  66| BB 00000000		 MOV	 EBX, 0
+    109	    00C4  66| 26: 0F B3	1D		 BTR	 DWORD PTR ES:[DI], EBX	; left,top = 0
+    110	    00C9  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE   ;
+    111	    00CF  66| 0F B7 16 0000e		 MOVZX	 EDX, YSIZE   ;
+    112	    00D5  66| 4A			 DEC	 EDX	      ;
+    113	    00D7  66| F7 E2			 MUL	 EDX	      ;
+    114	    00DA  66| C1 E2 10			 SHL	 EDX, 16      ;
+Turbo Assembler	 Version 3.2	    04/04/98 22:54:30	    Page 3
+C:\BP\USR\ILJA\SRC\LIFE\LIFE.ASM
+LIFE
+
+
+    115	    00DE  66| 0B C2			 OR	 EAX, EDX     ;	EAX = right-1,bottom-1
+    116	    00E1  66| 83 E8 02			 SUB	 EAX, 2	      ;	EAX = right-1,bottom-1
+    117	    00E5  66| 26: 0F A3	05		 BT	 DWORD PTR ES:[DI], EAX
+    118	    00EA  73 07	90 90			 JNC	 @@a
+    119	    00EE  66| 26: 0F AB	1D		 BTS	 DWORD PTR ES:[DI], EBX	; left,top = 1
+    120	    00F3			 @@A:
+    121					 ; dst = right,top
+    122	    00F3  66| 0F B7 1E 0000e		 MOVZX	 EBX, XSIZE   ;
+    123	    00F9  66| 4B			 DEC	 EBX	      ;
+    124	    00FB  66| 26: 0F B3	1D		 BTR	 DWORD PTR ES:[DI], EBX
+    125	    0100  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE   ;
+    126	    0106  66| 0F B7 16 0000e		 MOVZX	 EDX, YSIZE   ;
+    127	    010C  66| 83 EA 02			 SUB	 EDX,2	      ;
+    128	    0110  66| F7 E2			 MUL	 EDX	      ;
+    129	    0113  66| C1 E2 10			 SHL	 EDX, 16      ;
+    130	    0117  66| 0B C2			 OR	 EAX, EDX     ;
+    131	    011A  66| 40			 INC	 EAX
+    132	    011C  66| 26: 0F A3	05		 BT	 DWORD PTR ES:[DI], EAX
+    133	    0121  73 07	90 90			 JNC	 @@b
+    134	    0125  66| 26: 0F AB	1D		 BTS	 DWORD PTR ES:[DI], EBX
+    135	    012A			 @@B:
+    136					 ; dst = right,bottom
+    137	    012A  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE   ;
+    138	    0130  66| 0F B7 16 0000e		 MOVZX	 EDX, YSIZE   ;
+    139	    0136  66| F7 E2			 MUL	 EDX	      ;
+    140	    0139  66| C1 E2 10			 SHL	 EDX, 16      ;
+    141	    013D  66| 0B C2			 OR	 EAX, EDX     ;
+    142	    0140  66| 8B D8			 MOV	 EBX, EAX     ;
+    143	    0143  66| 4B			 DEC	 EBX	      ;	EBX = left,bottom
+    144	    0145  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE   ;
+    145	    014B  66| 40			 INC	 EAX	      ;	EAX = right-1,top+1
+    146	    014D  66| 26: 0F B3	1D		 BTR	 DWORD PTR ES:[DI], EBX	; right,top = 0
+    147	    0152  66| 26: 0F A3	05		 BT	 DWORD PTR ES:[DI], EAX
+    148	    0157  73 07	90 90			 JNC	 @@d
+    149	    015B  66| 26: 0F AB	1D		 BTS	 DWORD PTR ES:[DI], EBX
+    150	    0160			 @@d:
+    151					 ; dst = left,bottom
+    152	    0160  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE   ;
+    153	    0166  66| 0F B7 16 0000e		 MOVZX	 EDX, YSIZE   ;
+    154	    016C  66| 4A			 DEC	 EDX
+    155	    016E  66| F7 E2			 MUL	 EDX	      ;
+    156	    0171  66| C1 E2 10			 SHL	 EDX, 16      ;
+    157	    0175  66| 0B C2			 OR	 EAX, EDX     ;
+    158	    0178  66| 8B D8			 MOV	 EBX, EAX     ;
+    159	    017B  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE
+    160	    0181  66| 03 C0			 ADD	 EAX, EAX
+    161	    0184  66| 83 E8 02			 SUB	 EAX, 2
+    162	    0188  66| 26: 0F B3	1D		 BTR	 DWORD PTR ES:[DI], EBX	; right,top = 0
+    163	    018D  66| 26: 0F A3	05		 BT	 DWORD PTR ES:[DI], EAX
+    164	    0192  73 07	90 90			 JNC	 @@c
+    165	    0196  66| 26: 0F AB	1D		 BTS	 DWORD PTR ES:[DI], EBX
+    166	    019B			 @@C:
+    167					 ; bottom -> top
+    168	    019B  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE   ;
+    169	    01A1  66| 0F B7 16 0000e		 MOVZX	 EDX, YSIZE   ;
+    170	    01A7  66| 83 EA 02			 SUB	 EDX, 2	      ;
+    171	    01AB  66| F7 E2			 MUL	 EDX	      ;
+Turbo Assembler	 Version 3.2	    04/04/98 22:54:30	    Page 4
+C:\BP\USR\ILJA\SRC\LIFE\LIFE.ASM
+LIFE
+
+
+    172	    01AE  66| C1 E2 10			 SHL	 EDX, 16      ;
+    173	    01B2  66| 0B C2			 OR	 EAX, EDX     ;
+    174	    01B5  66| 40			 INC	 EAX	      ;	EAX = src
+    175	    01B7  66| BB 00000001		 MOV	 EBX, 1	      ;	EBX = dst
+    176	    01BD  66| 0F B7 0E 0000e		 MOVZX	 ECX, XSIZE   ;
+    177	    01C3  66| 83 E9 02			 SUB	 ECX, 2	      ;	ECX = xSize - 2
+    178	    01C7			 @@e:
+    179	    01C7  66| 26: 0F B3	1D		 BTR	 DWORD PTR ES:[DI], EBX
+    180	    01CC  66| 26: 0F A3	05		 BT	 DWORD PTR ES:[DI], EAX
+    181	    01D1  73 07	90 90			 JNC	 @@e1
+    182	    01D5  66| 26: 0F AB	1D		 BTS	 DWORD PTR ES:[DI], EBX
+    183	    01DA			 @@e1:
+    184	    01DA  66| 40			 INC	 EAX
+    185	    01DC  66| 43			 INC	 EBX
+    186	    01DE  E2 E7				 LOOP	 @@e
+    187
+    188					 ; top -> bottom
+    189	    01E0  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE   ;
+    190	    01E6  66| 0F B7 16 0000e		 MOVZX	 EDX, YSIZE   ;
+    191	    01EC  66| 4A			 DEC	 EDX	      ;
+    192	    01EE  66| F7 E2			 MUL	 EDX	      ;
+    193	    01F1  66| C1 E2 10			 SHL	 EDX, 16      ;
+    194	    01F5  66| 0B C2			 OR	 EAX, EDX     ;
+    195	    01F8  66| 40			 INC	 EAX	      ;
+    196	    01FA  66| 8B D8			 MOV	 EBX, EAX     ;	EBX = dst
+    197	    01FD  66| 0F B7 06 0000e		 MOVZX	 EAX, XSIZE   ;
+    198	    0203  66| 40			 INC	 EAX	      ;	EAX = src
+    199	    0205  66| 0F B7 0E 0000e		 MOVZX	 ECX, XSIZE   ;
+    200	    020B  66| 83 E9 02			 SUB	 ECX, 2	      ;	ECX = xSize - 2
+    201	    020F			 @@f:
+    202	    020F  66| 26: 0F B3	1D		 BTR	 DWORD PTR ES:[DI], EBX
+    203	    0214  66| 26: 0F A3	05		 BT	 DWORD PTR ES:[DI], EAX
+    204	    0219  73 07	90 90			 JNC	 @@f1
+    205	    021D  66| 26: 0F AB	1D		 BTS	 DWORD PTR ES:[DI], EBX
+    206	    0222			 @@f1:
+    207	    0222  66| 40			 INC	 EAX
+    208	    0224  66| 43			 INC	 EBX
+    209	    0226  E2 E7				 LOOP	 @@f
+    210
+    211					 ; left	-> right
+    212	    0228  66| 0F B7 16 0000e		 MOVZX	 EDX, XSIZE   ;
+    213	    022E  66| 8B DA			 MOV	 EBX, EDX
+    214	    0231  66| 03 DB			 ADD	 EBX, EBX
+    215	    0234  66| 4B			 DEC	 EBX	      ;	EBX = dst
+    216	    0236  66| 8B C2			 MOV	 EAX, EDX
+    217	    0239  66| 40			 INC	 EAX	      ;	EAX = src
+    218	    023B  66| 0F B7 0E 0000e		 MOVZX	 ECX, XSIZE   ;
+    219	    0241  66| 83 E9 02			 SUB	 ECX, 2	      ;	ECX = xSize - 2
+    220	    0245			 @@g:
+    221	    0245  66| 26: 0F B3	1D		 BTR	 DWORD PTR ES:[DI], EBX
+    222	    024A  66| 26: 0F A3	05		 BT	 DWORD PTR ES:[DI], EAX
+    223	    024F  73 07	90 90			 JNC	 @@g1
+    224	    0253  66| 26: 0F AB	1D		 BTS	 DWORD PTR ES:[DI], EBX
+    225	    0258			 @@g1:
+    226	    0258  66| 03 C2			 ADD	 EAX, EDX
+    227	    025B  66| 03 DA			 ADD	 EBX, EDX
+    228	    025E  E2 E5				 LOOP	 @@g
+Turbo Assembler	 Version 3.2	    04/04/98 22:54:30	    Page 5
+C:\BP\USR\ILJA\SRC\LIFE\LIFE.ASM
+LIFE
+
+
+    229
+    230					 ; right -> left
+    231	    0260  66| 0F B7 16 0000e		 MOVZX	 EDX, XSIZE   ;
+    232	    0266  66| 8B DA			 MOV	 EBX, EDX     ;	EBX = dst
+    233	    0269  66| 8B C2			 MOV	 EAX, EDX
+    234	    026C  66| 03 C0			 ADD	 EAX, EAX
+    235	    026F  66| 83 E8 02			 SUB	 EAX, 2	      ;	EAX = src
+    236	    0273  66| 0F B7 0E 0000e		 MOVZX	 ECX, XSIZE   ;
+    237	    0279  66| 83 E9 02			 SUB	 ECX, 2	      ;	ECX = xSize - 2
+    238	    027D			 @@h:
+    239	    027D  66| 26: 0F B3	1D		 BTR	 DWORD PTR ES:[DI], EBX
+    240	    0282  66| 26: 0F A3	05		 BT	 DWORD PTR ES:[DI], EAX
+    241	    0287  73 07	90 90			 JNC	 @@h1
+    242	    028B  66| 26: 0F AB	1D		 BTS	 DWORD PTR ES:[DI], EBX
+    243	    0290			 @@h1:
+    244	    0290  66| 03 C2			 ADD	 EAX, EDX
+    245	    0293  66| 03 DA			 ADD	 EBX, EDX
+    246	    0296  E2 E5				 LOOP	 @@h
+    247
+    248
+    249	    0298  5F				 POP	 DI
+    250	    0299  07				 POP	 ES
+    251	    029A  CB				 RET
+    252	    029B			 EDGES	 ENDP
+    253
+    254	    029B			 SHOWF	 PROC	 FAR
+    255					 .386
+    256	    029B  55				 PUSH	 BP
+    257	    029C  8B EC				 MOV	 BP, SP
+    258					 ; count FiedSize in DW
+    259	    029E  66| 33 C0			 XOR	 EAX, EAX      ;
+    260	    02A1  8B 46	06			 MOV	 AX, SS:[BP+6]	 ; ySize
+    261	    02A4  66| 33 D2			 XOR	 EDX, EDX	 ;
+    262	    02A7  8B 56	08			 MOV	 DX, SS:[BP+8]	 ; xSize
+    263	    02AA  66| F7 E2			 MUL	 EDX	      ;
+    264	    02AD  66| C1 E2 10			 SHL	 EDX, 16      ;
+    265	    02B1  66| 0B C2			 OR	 EAX, EDX     ;
+    266	    02B4  66| 83 C0 1F			 ADD	 EAX, 31      ;
+    267	    02B8  66| 33 D2			 XOR	 EDX, EDX     ;
+    268	    02BB  66| B9 00000020		 MOV	 ECX, 32      ;
+    269	    02C1  66| F7 F1			 DIV	 ECX	      ;
+    270	    02C4  8B C8				 MOV	 CX, AX	      ;
+    271
+    272					 ; load	ES:SI =	NewField;
+    273					 ; load	FS:DI =	OldField;
+    274	    02C6  C4 76	0E			 LES	 SI, SS:[BP+14]
+    275	    02C9  0F B4	7E 0A			 LFS	 DI, SS:[BP+10]
+    276	    02CD  8E EE				 MOV	 GS, SI
+    277	    02CF  FC				 CLD
+    278	    02D0			 @@SC:
+    279	    02D0  66| 26: 8B 14			 MOV	 EDX, ES:[SI]
+    280	    02D4  66| 64: 33 15			 XOR	 EDX, FS:[DI]
+    281	    02D8			 @@BTB:
+    282	    02D8  66| B8 00000000		 MOV	 EAX, 0
+    283	    02DE  66| 0F BC C2			 BSF	 EAX, EDX	; find first '1'
+    284	    02E2  74 43	90 90			 JZ	 @@BTE		; all '0's?
+    285	    02E6  66| 51			 PUSH	 ECX
+Turbo Assembler	 Version 3.2	    04/04/98 22:54:30	    Page 6
+C:\BP\USR\ILJA\SRC\LIFE\LIFE.ASM
+LIFE
+
+
+    286	    02E8  06				 PUSH	 ES
+    287	    02E9  56				 PUSH	 SI
+    288	    02EA  57				 PUSH	 DI
+    289	    02EB  66| 0F B3 C2			 BTR	 EDX, EAX	; clear	bit #EAX
+    290	    02EF  66| 52			 PUSH	 EDX
+    291	    02F1  33 FF				 XOR	 DI, DI
+    292	    02F3  66| 26: 0F A3	04		 BT	 DWORD PTR ES:[SI], EAX
+    293	    02F8  83 D7	00			 ADC	 DI, 0
+    294	    02FB  66| 33 DB			 XOR	 EBX, EBX
+    295	    02FE  8B DE				 MOV	 BX, SI
+    296	    0300  8C E9				 MOV	 CX, GS
+    297	    0302  2B D9				 SUB	 BX, CX
+    298	    0304  66| C1 E3 03			 SHL	 EBX, 3
+    299	    0308  66| 03 C3			 ADD	 EAX, EBX	; EAX =	index
+    300
+    301	    030B  66| 33 D2			 XOR	 EDX, EDX
+    302	    030E  66| 33 DB			 XOR	 EBX, EBX
+    303	    0311  8B 5E	08			 MOV	 BX, SS:[BP+8] ; xSize
+    304	    0314  66| F7 F3			 DIV	 EBX
+    305					 ; window checking
+    306					 ;	 CMP	 DX, 0
+    307					 ;	 JE	 @@XX
+    308					 ;	 CMP	 AX, 0
+    309					 ;	 JE	 @@XX
+    310					 ;	 MOV	 BX, SS:[BP+8] ; xSize
+    311					 ;	 DEC	 BX
+    312					 ;	 CMP	 DX, BX
+    313					 ;	 JE	 @@XX
+    314					 ;	 MOV	 BX, SS:[BP+6] ; ySize
+    315					 ;	 DEC	 BX
+    316					 ;	 CMP	 AX, BX
+    317					 ;	 JE	 @@XX
+    318	    0317  52				 PUSH	 DX ; x-coord
+    319	    0318  50				 PUSH	 AX ; y-coord
+    320	    0319  57				 PUSH	 DI ; state
+    321	    031A  FF 1E	0000e			 CALL	 DWORD PTR [SHOWCELL]
+    322	    031E  66| 5A		 @@XX:	 POP	 EDX
+    323	    0320  5F				 POP	 DI
+    324	    0321  5E				 POP	 SI
+    325	    0322  07				 POP	 ES
+    326	    0323  66| 59			 POP	 ECX
+    327	    0325  EB B1				 JMP	 @@BTB
+    328	    0327			 @@BTE:
+    329	    0327  49				 DEC	 CX
+    330	    0328  83 C6	04			 ADD	 SI,4
+    331	    032B  83 C7	04			 ADD	 DI,4
+    332					 ;	 cld
+    333					 ;	 REPE CMPSD ; find next	different cells
+    334					 ;	 JZ	 @@SE
+    335					 ;	 LOOP	 @@SC
+    336	    032E  83 F9	00			 CMP	 CX, 0
+    337	    0331  75 9D				 JNZ	 @@SC
+    338	    0333			 @@SE:
+    339					 ;	 CMP	 DI, SI
+    340					 ;	 JL	 @@SCAN
+    341					 ;
+    342	    0333  C9				 LEAVE
+Turbo Assembler	 Version 3.2	    04/04/98 22:54:30	    Page 7
+C:\BP\USR\ILJA\SRC\LIFE\LIFE.ASM
+LIFE
+
+
+    343	    0334  CA 000C			 RET	 12
+    344	    0337			 SHOWF	 ENDP
+    345
+    346	    0337			 CODE	 ENDS
+    347					 END
+Turbo Assembler	 Version 3.2	    04/04/98 22:54:30	    Page 8
+Symbol Table
+LIFE
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "04/04/98"
+??FILENAME			  Text	 "LIFE	  "
+??TIME				  Text	 "22:54:30"
+??VERSION			  Number 0314
+@@10				  Near	 CODE:009F
+@@11				  Near	 CODE:00AB
+@@A				  Near	 CODE:00F3
+@@B				  Near	 CODE:012A
+@@BTB				  Near	 CODE:02D8
+@@BTE				  Near	 CODE:0327
+@@C				  Near	 CODE:019B
+@@D				  Near	 CODE:0160
+@@E				  Near	 CODE:01C7
+@@E1				  Near	 CODE:01DA
+@@F				  Near	 CODE:020F
+@@F1				  Near	 CODE:0222
+@@G				  Near	 CODE:0245
+@@G1				  Near	 CODE:0258
+@@H				  Near	 CODE:027D
+@@H1				  Near	 CODE:0290
+@@SC				  Near	 CODE:02D0
+@@SE				  Near	 CODE:0333
+@@XX				  Near	 CODE:031E
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 CODE
+@CYCLE				  Near	 CODE:002B
+@FILENAME			  Text	 LIFE
+@WORDSIZE			  Text	 4
+EDGES				  Far	 CODE:00B8
+FIELD				  Word	 DATA:---- Extern
+ITERATE				  Far	 CODE:0000
+SHOWCELL			  Far	 DATA:---- Extern
+SHOWF				  Far	 CODE:029B
+TEMPFIELD			  Far	 DATA:---- Extern
+TEST8086			  Byte	 DATA:---- Extern
+XSIZE				  Word	 DATA:---- Extern
+YSIZE				  Word	 DATA:---- Extern
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+CODE				  16  0337 Byte	  Public
+DATA				  16  0000 Word	  Public
+

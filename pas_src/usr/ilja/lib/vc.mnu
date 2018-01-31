@@ -1,0 +1,4 @@
+M:	Move to archive
+        @pkzip -ex -r -p -m &general.zip *.*
+R:	Refresh archive
+        @pkzip -ex -r -p &general.zip *.*
